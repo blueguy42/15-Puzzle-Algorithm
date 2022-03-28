@@ -153,6 +153,12 @@ try:
     # 2 LEFT	// NEXT MOVE RIGHT
     # 3 DOWN	// NEXT MOVE UP
     # 4 RIGHT	// NEXT MOVE LEFT
+
+    # list format
+    # 0 - Puzzle
+    # 1 - Cost
+    # 2 - Distance from root
+    # 3 - Previous move
     rootNode = [Puzzle, 0, 0, [0]]
     queuePuzzle.append(Puzzle)
     queueCost.append(0)

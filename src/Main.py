@@ -1,101 +1,10 @@
-import numpy as np
-import random
 import time
+from queue import PriorityQueue
+
 from Exception import *
-
-def PrintPuzzle(puzzle):
-    """Print puzzle with padding for 1 or 2 digits"""
-    for i in range(4):
-        for j in range(4):
-            if puzzle[i, j] < 10:
-                print(f" {puzzle[i, j]} ", end="")
-            else:
-                print(f"{puzzle[i, j]} ", end="")
-        print()
-
-def CheckValidPuzzle(puzzle):
-    """Check if a puzzle is considered valid"""
-
-    # Check if rows of puzzle are 4
-    if len(Puzzle) != 4:
-        raise Shape44Error
-    # Check if length of each row is 4
-    for i in range(4):
-        if len(Puzzle[i]) != 4:
-            raise Shape44Error
-    # Check if length of unique elements is 16
-    if len(list(set(i for j in Puzzle for i in j))) != 16:
-        raise Shape44Error
-    # Check if each element is between 0 and 15
-    for i in range(4):
-        for j in range(4):
-            if not 0 <= Puzzle[i][j] <= 15:
-                raise Shape44Error
-
-
-def ArrayKurangI(puzzle):
-    """Returns an array of index 0-15 to calculate Kurang(i)
-    for each i tile"""
-    # Initialize flattened array to iterate easier
-    FlattenedPuzzle = (np.asarray(puzzle)).flatten()
-    lengthFlattened = len(FlattenedPuzzle)
-    KurangI = [0 for i in range(lengthFlattened)]
-
-    # calculte sum of Kurang(i) for each i
-    for i in range(lengthFlattened):
-        # if i = 0, assume all next elements add up to Kurang(0)
-        if FlattenedPuzzle[i] == 0:
-            KurangI[FlattenedPuzzle[i]] += lengthFlattened - (i + 1)
-        for j in range(i+1, lengthFlattened):
-            if FlattenedPuzzle[j] < FlattenedPuzzle[i] and FlattenedPuzzle[j] != 0:
-                KurangI[FlattenedPuzzle[i]] += 1
-    return KurangI
-
-
-def PrintTileKurangI(arr):
-    """Print Kurang(i) for each i tile"""
-    for i in range(1, len(arr)):
-        print(f"Tile {i}: {arr[i]}")
-    print(f"Empty tile: {arr[0]}")
-
-
-def KurangIX(puzzle, arrKurangI):
-    """calculate X based on 0 position"""
-    if (np.where(puzzle == 0)[0] + np.where(puzzle == 0)[1]) % 2 == 1:
-        return 1
-    else:
-        return 0
-
-
-def GeneratePuzzle():
-    """Generate a random puzzle"""
-    Puzzle = [[0 for j in range(4)] for i in range(4)]
-    Elements = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    for i in range(4):
-        for j in range(4):
-            Puzzle[i][j] = random.choice(Elements)
-            Elements.remove(Puzzle[i][j])
-    return Puzzle
-
-
-def OpenPuzzle(filename):
-    """Open a puzzle from a file"""
-    with open('test/'+filename, 'r') as f:
-            Puzzle = [[int(num) for num in line.split()] for line in f]
-    return Puzzle
-
-
-def Cost(puzzle, currentDistance):
-    """Returns cost of a node using c(i) = f(i) + g(i)
-    where c(i) is cost of node i, f(i) is cost to reach
-    node i from root, and g(i) is total of non-empty tile
-    that is in wrong place"""
-    cost = currentDistance
-    for i in range(4):
-        for j in range(4):
-            if i*4+j+1 != puzzle[i, j] and puzzle[i, j] != 0:
-                cost += 1
-    return cost
+from Prerequisites import *
+from PuzzleGeneration import *
+from PuzzleNode import *
 
 try:
     print("=============================================")
@@ -139,14 +48,17 @@ try:
         raise NotReachableError
     print("\nPUZZLE SOLUTION IS REACHABLE!\n")
 
-    raisedNodes = 1
-    queuePuzzle = []
-    queueCost = []
-    queueDistance = []
-    queueMoves = []
+    checkedMatrics = {}
+    checkedMatrics[Puzzle.tobytes()] = True
 
-    solutionCost = float("inf")
-    solutionMoves = []
+    q = PriorityQueue()
+    rootNode = PuzzleNode(Puzzle, 0, [0])
+    priority = 0
+    raisedNodes = 1
+    q.put((rootNode.getCost(), priority, rootNode))
+
+    solutionMatrix = np.matrix([[1,2,3,4], [5,6,7,8], [9,10,11,12], [13,14,15,0]])
+
     # Make prioqueue of nodes (matrix, cost, distance from root, previous moves)
     # 0 NONE
     # 1 UP		// NEXT MOVE DOWN
@@ -159,142 +71,74 @@ try:
     # 1 - Cost
     # 2 - Distance from root
     # 3 - Previous move
-    rootNode = [Puzzle, 0, 0, [0]]
-    queuePuzzle.append(Puzzle)
-    queueCost.append(0)
-    queueDistance.append(0)
-    queueMoves.append([0])
 
-    # print(queuePuzzle)
-    # print(queueCost)
-    # print(queueDistance)
-    # print(queueMoves)
-    # print()
-    # input()
+    foundSolution = False
+    while not q.empty() and not foundSolution:
+        currentNode = q.get()[2]
+        lastMove = currentNode.getLastMove()
 
-    while queueCost:
-        
-        currentIndex = queueCost.index(min(queueCost))
-        currentPuzzle = queuePuzzle[currentIndex]
-        currentCost = queueCost[currentIndex]
-        currentDistance = queueDistance[currentIndex]+1
-        currentMoves = queueMoves[currentIndex]
-        lastMove = currentMoves[-1]
-
-        queuePuzzle.pop(currentIndex)
-        queueCost.pop(currentIndex)
-        queueDistance.pop(currentIndex)
-        queueMoves.pop(currentIndex)
-
-        # Check if node is solution
-        solution = True
-        flattenSolution = np.asarray(currentPuzzle).flatten()
-        for i in range(len(flattenSolution)-1):
-            if flattenSolution[i] != i+1:
-                solution = False
-                break
-        if solution:
-            # input("LOH EQUAL: ")
-
-            # if not solutionMoves:
-            solutionCost = currentCost
-            solutionMoves = currentMoves
-            print("MASYA ALLAH")
-            break
-            # else:
-            #     if solutionCost > currentCost:
-            #         solutionCost = currentCost
-            #         solutionMoves = currentMoves
-            #         print("TUHANN")
-            
-            # eliminateIndex = np.where(np.array(queueCost) > currentCost)
-            # eliminateIndex = np.array(eliminateIndex)
-            # print(eliminateIndex)
-            # queuePuzzle = [i for j, i in enumerate(queuePuzzle) if j not in eliminateIndex]
-            # queueCost = [i for j, i in enumerate(queueCost) if j not in eliminateIndex]
-            # queueDistance = [i for j, i in enumerate(queueDistance) if j not in eliminateIndex]
-            # queueMoves = [i for j, i in enumerate(queueMoves) if j not in eliminateIndex]
-            # # input("WADIDAW: ")
+        if (currentNode.comparePuzzle(solutionMatrix)):
+            foundSolution = True
         else:
-        
-        
-
-            row0, col0 = np.where(currentPuzzle == 0)
-
             # NEXT MOVE DOWN
-            if lastMove != 1 and row0 < 3:
-                newPuzzle = currentPuzzle.copy()
-                newPuzzle[row0, col0] = currentPuzzle[row0+1, col0]
-                newPuzzle[row0+1, col0] = 0
+            if lastMove != 1 and currentNode.getRowNull() < 3:
+                newPuzzle = currentNode.getPuzzle().copy()
+                newNode = PuzzleNode(newPuzzle, currentNode.getDistance()+1, currentNode.getMoves().copy())
+                newNode.moveDown()
+                newNode.addMove(3)
+                if newNode.getPuzzle().tobytes() not in checkedMatrics:
+                    checkedMatrics[newNode.getPuzzle().tobytes()] = True
+                    raisedNodes += 1
+                    priority -= 1
+                    q.put((newNode.getCost(), priority, newNode))
 
-                queuePuzzle.append(newPuzzle)
-                queueCost.append(Cost(newPuzzle, currentDistance))
-                queueDistance.append(currentDistance)
-                queueMoves.append(currentMoves + [3])
-
-                raisedNodes += 1
-            
             # NEXT MOVE RIGHT
-            if lastMove != 2 and col0 < 3:
-                newPuzzle = currentPuzzle.copy()
-                newPuzzle[row0, col0] = currentPuzzle[row0, col0+1]
-                newPuzzle[row0, col0+1] = 0
-                newNode = [newPuzzle, Cost(newPuzzle, currentDistance), currentDistance, currentMoves + [4]]
-                
-                queuePuzzle.append(newPuzzle)
-                queueCost.append(Cost(newPuzzle, currentDistance))
-                queueDistance.append(currentDistance)
-                queueMoves.append(currentMoves + [4])
-
-                raisedNodes += 1
+            if lastMove != 2 and currentNode.getColNull() < 3:
+                newPuzzle = currentNode.getPuzzle().copy()
+                newNode = PuzzleNode(newPuzzle, currentNode.getDistance()+1, currentNode.getMoves().copy())
+                newNode.moveRight()
+                newNode.addMove(4)
+                if newNode.getPuzzle().tobytes() not in checkedMatrics:
+                    checkedMatrics[newNode.getPuzzle().tobytes()] = True
+                    raisedNodes += 1
+                    priority -= 1
+                    q.put((newNode.getCost(), priority, newNode))
             
             # NEXT MOVE UP
-            if lastMove != 3 and row0 > 0:
-                newPuzzle = currentPuzzle.copy()
-                newPuzzle[row0, col0] = currentPuzzle[row0-1, col0]
-                newPuzzle[row0-1, col0] = 0
-                newNode = [newPuzzle, Cost(newPuzzle, currentDistance), currentDistance, currentMoves + [1]]
-                
-                queuePuzzle.append(newPuzzle)
-                queueCost.append(Cost(newPuzzle, currentDistance))
-                queueDistance.append(currentDistance)
-                queueMoves.append(currentMoves + [1])
-
-                raisedNodes += 1
+            if lastMove != 3 and currentNode.getRowNull() > 0:
+                newPuzzle = currentNode.getPuzzle().copy()
+                newNode = PuzzleNode(newPuzzle, currentNode.getDistance()+1, currentNode.getMoves().copy())
+                newNode.moveUp()
+                newNode.addMove(1)
+                if newNode.getPuzzle().tobytes() not in checkedMatrics:
+                    checkedMatrics[newNode.getPuzzle().tobytes()] = True
+                    raisedNodes += 1
+                    priority -= 1
+                    q.put((newNode.getCost(), priority, newNode))
             
             # NEXT MOVE LEFT
-            if lastMove != 4 and col0 > 0:
-                newPuzzle = currentPuzzle.copy()
-                newPuzzle[row0, col0] = currentPuzzle[row0, col0-1]
-                newPuzzle[row0, col0-1] = 0
-                newNode = [newPuzzle, Cost(newPuzzle, currentDistance), currentDistance, currentMoves + [2]]
-                
-                queuePuzzle.append(newPuzzle)
-                queueCost.append(Cost(newPuzzle, currentDistance))
-                queueDistance.append(currentDistance)
-                queueMoves.append(currentMoves + [2])
+            if lastMove != 4 and currentNode.getColNull() > 0:
+                newPuzzle = currentNode.getPuzzle().copy()
+                newNode = PuzzleNode(newPuzzle, currentNode.getDistance()+1, currentNode.getMoves().copy())
+                newNode.moveLeft()
+                newNode.addMove(2)
+                if newNode.getPuzzle().tobytes() not in checkedMatrics:
+                    checkedMatrics[newNode.getPuzzle().tobytes()] = True
+                    raisedNodes += 1
+                    priority -= 1
+                    q.put((newNode.getCost(), priority, newNode))
 
-                raisedNodes += 1
-
-            # print(queuePuzzle)
-            # print(queueCost)
-            # print(queueDistance)
-            # print(queueMoves)
-            # print()
-
-            # input()
-
-
-
-    solutionMoves = solutionMoves[1::]
+    currentNode.printNode()
+    solutionMoves = currentNode.getMoves()[1::]
     print(solutionMoves)
+    print(len(solutionMoves))
     print(f"Time taken: {time.time() - startTime} seconds")
     print(f"Raised nodes: {raisedNodes}")
 
         
 
-# except ValueError:
-#     print("\nPlease input a number!")
+except ValueError:
+    print("\nPlease input a number!")
 except SelectionError:
     print("\nPlease input an allowed selection!")
 except Shape44Error:
@@ -303,4 +147,7 @@ except FileNotFoundError:
     print("\nPuzzle file not found!")
 except NotReachableError:
     print("\nPUZZLE SOLUTION IS NOT REACHABLE!")
+    print(f"Time taken: {time.time() - startTime} seconds")
+except KeyboardInterrupt:
+    print(f"Raised nodes: {raisedNodes}")
     print(f"Time taken: {time.time() - startTime} seconds")

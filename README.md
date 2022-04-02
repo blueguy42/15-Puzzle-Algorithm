@@ -45,10 +45,10 @@ python src/Main.py
 
 Inputting from a file requires the puzzle to be inputted in a format of numbers 1-15 of 4 rows and 4 columns separated by a space, with an empty tile represented by a 0. For example:
 ```
-6 5 3 8
-0 1 4 7
-2 9 14 11
-13 15 10 12
+5 1 7 3
+9 2 6 4
+10 11 8 12
+13 14 0 15
 ```
 The file needs to be in a .txt format and put in the `test` folder. 
 

@@ -1,3 +1,4 @@
+from os.path import dirname, abspath
 import random
 from Exception import *
 
@@ -32,19 +33,23 @@ def GeneratePuzzle():
     return Puzzle
 
 
-def OpenPuzzle(filename):
-    """Open a puzzle from a file"""
-    with open('test/'+filename, 'r') as f:
+def OpenPuzzle(mainpath, filename):
+    """Open a puzzle from a file in test folder"""
+    with open(mainpath + filename, 'r') as f:
             Puzzle = [[int(num) for num in line.split()] for line in f]
     return Puzzle
 
 
 def PrintPuzzle(puzzle):
     """Print puzzle with padding for 1 or 2 digits"""
+    print("===========")
     for i in range(4):
         for j in range(4):
-            if puzzle[i, j] < 10:
+            if puzzle[i, j] == 0:
+                print(" - ", end="")
+            elif puzzle[i, j] < 10:
                 print(f" {puzzle[i, j]} ", end="")
             else:
                 print(f"{puzzle[i, j]} ", end="")
         print()
+    print("===========")

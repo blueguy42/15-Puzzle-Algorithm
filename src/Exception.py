@@ -2,7 +2,7 @@ class Error(Exception):
     """Base class for other exceptions"""
     pass
 
-class SelectionError(Exception):
+class SelectionError(Error):
     """Raised when the user selects an invalid option"""
     pass
 

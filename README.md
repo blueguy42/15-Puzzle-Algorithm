@@ -9,6 +9,7 @@ Solving 15-Puzzle Problems with <i>Branch and Bound</i> Algorithm
 * [Requirement and Installation](#requirement-and-installation)
 * [How to Run](#how-to-run)
 * [Example Program Usage](#example-program-usage)
+* [Disclaimer](#disclaimer)
 * [Contact](#contact)
 
 ## General Information
@@ -175,6 +176,9 @@ Raised nodes: 117
 ==============================================
 ```
 Et Voilà! The program will show the runtime required to run the algorithm and the number of nodes generated to find the solution.
+
+## Disclaimer
+Due to the limited nature of the branch and bound algorithm, it is not recommended to generate the puzzle randomly using the random generator. Try at your own risk!
 
 ## Contact
 This program was made by Ahmad Alfani Handoyo (13520023).

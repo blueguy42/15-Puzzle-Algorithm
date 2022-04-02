@@ -32,4 +32,3 @@ def KurangIX(puzzle, arrKurangI):
         return 1
     else:
         return 0
-

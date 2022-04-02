@@ -1,5 +1,7 @@
 import time
 import numpy as np
+from os.path import dirname, abspath
+
 from Exception import *
 from Prerequisites import *
 from PuzzleGeneration import *
@@ -118,7 +120,7 @@ except KeyboardInterrupt:
     print(f"Keyboard Interrupt!")
 except NotReachableError:
     print("\nPUZZLE SOLUTION IS NOT REACHABLE!")
-    print(f"Algorithm runtime: {time.time() - startTime} seconds")
+    print(f"Algorithm runtime: {str(time.time() - startTime)} seconds")
 
 print("\n==============================================")
 print(" THANK YOU FOR USING AFAN'S 15-PUZZLE SOLVER!")
